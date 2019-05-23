@@ -26,8 +26,9 @@ object CutWordTest {
 
     import org.apache.spark.sql.functions._
     import spark.implicits._
-    orders.filter($"description".notEqual("")).show(5)
-
+    orders.filter($"description".notEqual("null"))
+      .filter($"description".notEqual(""))
+      .show(5)
 
     spark.stop()
   }
