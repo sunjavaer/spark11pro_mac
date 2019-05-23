@@ -1,6 +1,11 @@
 package lvliang
 
-import org.apache.spark.sql.SparkSession
+import com.huaban.analysis.jieba.JiebaSegmenter.SegMode
+import com.huaban.analysis.jieba.{JiebaSegmenter, SegToken}
+import org.apache.spark
+import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.functions._
+
 
 /**
   * <p>Company:misspao </p >
@@ -10,6 +15,8 @@ import org.apache.spark.sql.SparkSession
   * @Description:
   */
 object CutWordTest {
+
+
 
   def main(args: Array[String]): Unit = {
     print("cut word test")
@@ -22,12 +29,27 @@ object CutWordTest {
       .enableHiveSupport()
       .getOrCreate
 
+    def jieba_seg(df:DataFrame,colname:String): DataFrame ={
+
+      val segmenter = new JiebaSegmenter()
+      val seg = spark.sparkContext.broadcast(segmenter)
+      val jieba_udf = udf{(sentence:String)=>
+        val segV = seg.value
+        segV.process(sentence.toString, SegMode.INDEX)
+          .toArray().map(_.asInstanceOf[SegToken].word)
+          .filter(_.length>1).mkString("/")
+      }
+      df.withColumn("cut_description",jieba_udf(col(colname)))
+    }
+
     val orders = spark.sql("select * from misspao.mp_deposit_order")
 
-    import org.apache.spark.sql.functions._
-    import spark.implicits._
-    orders.where("description <> 'null'").where("description <> ''")
-      .show(5)
+
+    val description = orders.where("description <> 'null'")
+      .where("description <> ''")
+      .select("description")
+
+    jieba_seg(description, "description").show(10)
 
     spark.stop()
   }
