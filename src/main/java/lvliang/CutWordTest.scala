@@ -25,7 +25,9 @@ object CutWordTest {
     val orders = spark.sql("select * from misspao.mp_deposit_order")
 
     import org.apache.spark.sql.functions._
-    orders.filter(col("description").notEqual("")).show(5)
+    import spark.implicits._
+    orders.filter($"description".notEqual("")).show(5)
+
 
     spark.stop()
   }
