@@ -26,12 +26,14 @@ object UDFTest {
 
     val order_dow = udf((col: String) =>
       if(col.equals("0")) {
-        return "MON"
+        "MON"
       } else {
-        return "none"
+        "none"
       }
     )
 
     orders.withColumn("days", order_dow(col("order_dow"))).show()
+
+    spark.stop()
   }
 }
