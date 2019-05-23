@@ -46,7 +46,7 @@ object UDFTest {
       }
     )
 
-    orders.withColumn("days", order_dow(col("order_dow"))).show()
+    orders.withColumn("order_dow", order_dow(col("order_dow"))).show()
 
     spark.stop()
   }
