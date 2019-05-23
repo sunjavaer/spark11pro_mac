@@ -26,7 +26,21 @@ object UDFTest {
 
     val order_dow = udf((col: String) =>
       if(col.equals("0")) {
-        "MON"
+        "Monday"
+      } else if(col.equals("1")) {
+        "Tuesday"
+      } else if(col.equals("2")) {
+        "Wednesday"
+      } else if(col.equals("3")) {
+        "Thursday"
+      } else if(col.equals("4")) {
+        "Friday"
+      } else if(col.equals("5")) {
+        "Tuesday"
+      } else if(col.equals("6")) {
+        "Saturday"
+      } else if(col.equals("7")) {
+        "Sunday"
       } else {
         "none"
       }
