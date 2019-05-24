@@ -12,7 +12,10 @@ import org.apache.spark.sql.functions._
   */
 object Product01 {
 
-  def main(args: Array[String]): Unit = {
+  /**
+    * 统计product被购买的数据量
+    */
+  def q1() = {
     var warehouseLocation = "/usr/hive/warehouse"
     val spark: SparkSession = SparkSession.builder
       .appName("SparkTest")
@@ -21,13 +24,37 @@ object Product01 {
       .enableHiveSupport()
       .getOrCreate
 
-    val orders = spark.sql("select * from badou.order_products_prior")
-//    orders.groupBy(col("product_id")).agg(col("order_id")).show(10)
+    val order_products_prior = spark.sql("select * from badou.order_products_prior")
+    //    order_products_prior.groupBy(col("product_id")).agg(col("order_id")).show(10)
 
 
-    orders.groupBy("product_id").count().show(5)
+    order_products_prior.groupBy("product_id").count().show(5)
 
     spark.stop()
+  }
+
+  /**
+    * 统计product 被reordered的数量（再次购买）
+    */
+  def q2() = {
+    var warehouseLocation = "/usr/hive/warehouse"
+    val spark: SparkSession = SparkSession.builder
+      .appName("SparkTest")
+      //      .master("local[*]")               //提交模式交给spark-submit控制
+      .config("spark.sql.warehouse.dir", warehouseLocation)
+      .enableHiveSupport()
+      .getOrCreate
+
+    val order_products_prior = spark.sql("select * from badou.order_products_prior")
+
+    order_products_prior.where("reordered = 1").show(100)
+
+    spark.stop()
+  }
+
+  def main(args: Array[String]): Unit = {
+//    Product01.q1()
+    Product01.q2()
   }
 
 }
