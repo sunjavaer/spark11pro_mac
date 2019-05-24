@@ -41,7 +41,7 @@ object JiebaKry2 {
       df.withColumn("seg",jieba_udf(col(colname)))  //默认最后一行是返回值，这里还是driver执行
     }
 
-    val df =spark.sql("select sentence, label from news_noseg limit 300")
+    val df =spark.sql("select sentence, label from badou.news_noseg limit 300")
     val df_seg = jieba_seg(df,"sentence")
     df_seg.show()
     df_seg.write.mode("overwrite").saveAsTable("news_jieba")  //将新数据保存到一个新表
