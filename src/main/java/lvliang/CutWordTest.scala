@@ -21,6 +21,9 @@ object CutWordTest {
   def main(args: Array[String]): Unit = {
     print("cut word test")
 
+    val word = new Word()
+    word.say("aaaaa")
+
     var warehouseLocation = "/usr/hive/warehouse"
     val spark: SparkSession = SparkSession.builder
       .appName("SparkTest")
