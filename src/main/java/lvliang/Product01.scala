@@ -22,7 +22,7 @@ object Product01 {
       .getOrCreate
 
     val orders = spark.sql("select * from badou.order_products_prior")
-    orders.groupBy(col("product_id")).agg(sum("*")).show(10)
+    orders.groupBy(col("product_id")).agg(sum("order_id")).show(10)
 
     spark.stop()
   }
