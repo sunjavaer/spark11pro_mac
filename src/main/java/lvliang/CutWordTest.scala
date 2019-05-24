@@ -45,23 +45,21 @@ object CutWordTest {
 //      df.withColumn("cut_description",jieba_udf(col(colname)))
 //    }
 
-    def jieba_seg_no_broadcast(df:DataFrame,colname:String): DataFrame ={
-
-      val segmenter = new JiebaSegmenter()
-//      val seg = spark.sparkContext.broadcast(segmenter)
-      val seq = segmenter
+    def jieba_seg_no_broadcast(df:DataFrame, colname:String): DataFrame ={
       val jieba_udf = udf{(sentence:String)=>
+        val segmenter = new JiebaSegmenter()
+        //      val seg = spark.sparkContext.broadcast(segmenter)
+        val seq = segmenter
 //        val segV = seg.value
         seq.process(sentence.toString, SegMode.INDEX)
           .toArray().map(_.asInstanceOf[SegToken].word)
           .filter(_.length>1).mkString("/")
       }
-      df.withColumn("cut_description",jieba_udf(col(colname)))
+
+      df.withColumn("cut_description", jieba_udf(col(colname)))
     }
 
     val orders = spark.sql("select * from misspao.mp_deposit_order")
-
-
     val description = orders.where("description <> 'null'")
       .where("description <> ''")
       .select("description")
