@@ -7,7 +7,7 @@ package lvliang
   * @Date: Create in 17:44 2019-05-24
   * @Description:
   */
-class Test {
+class Test extends Serializable {
 
   def say(s: String) = {
     println(s)
