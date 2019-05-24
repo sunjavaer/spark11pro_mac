@@ -21,8 +21,7 @@ object CutWordTest {
   def main(args: Array[String]): Unit = {
     print("cut word test")
 
-    val word = new Word()
-    word.say("aaaaa")
+
 
     var warehouseLocation = "/usr/hive/warehouse"
     val spark: SparkSession = SparkSession.builder
@@ -45,8 +44,11 @@ object CutWordTest {
 //      df.withColumn("cut_description",jieba_udf(col(colname)))
 //    }
 
-    def jieba_seg_no_broadcast(df:DataFrame, colname:String): DataFrame ={
+    def jieba_seg_no_broadcast(df:DataFrame, colname:String): DataFrame = {
+      val word = new Word()
+
       val jieba_udf = udf{(sentence:String)=>
+        word.say("aaaaa")
         val segmenter = new JiebaSegmenter()
         //      val seg = spark.sparkContext.broadcast(segmenter)
         val seq = segmenter
