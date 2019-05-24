@@ -56,7 +56,7 @@ object CutWordTest {
       df.withColumn("cut_description",jieba_udf(col(colname)))
     }
 
-    val orders = spark.sql("select * from mp_deposit_order")
+    val orders = spark.sql("select * from misspao.mp_deposit_order")
 
 
     val description = orders.where("description <> 'null'")
