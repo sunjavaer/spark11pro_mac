@@ -87,7 +87,7 @@ object UserStat {
 
     //获取用户总商品数量
     var userProductAllCount = orders.join(order_products_prior, "order_id").groupBy("user_id").count().toDF("user_id", "user_product_all_count")
-    var userProudctCount = orders.join(order_products_prior, "order_id").select("user_id", "product_id").distinct()
+    var userProudctCount = orders.join(order_products_prior, "order_id").select("user_id", "product_id").distinct().groupBy("user_id").count().toDF("user_id", "user_product_count")
 
     userProudctCount.join(userProductAllCount, "user_id").show(10)
 
