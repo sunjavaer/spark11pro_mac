@@ -24,13 +24,18 @@ object UserStat {
       .enableHiveSupport()
       .getOrCreate
 
-    val orders = spark.sql("select * from orders")
+    val orders = spark.sql("select * from badou.orders").where("user_id <> 'user_id'")
+
+    var toInt = udf((col: String) => if (col == null) {0} else if(col.isEmpty()) {0} else {col.toFloat})
 
     //获取每个用户的订单总量
-    val userOrderCount = orders.groupBy("user_id").count().withColumnRenamed("count", "user_order_count")
+    val userOrderCount = orders.groupBy("user_id").count().withColumnRenamed("count", "user_product_count")
+    val userOrderSumDays = orders.withColumn("days_since_prior_order_int", toInt(col("days_since_prior_order"))).select("user_id", "days_since_prior_order_int").groupBy("user_id").sum("days_since_prior_order_int").withColumnRenamed("sum(days_since_prior_order_int)", "sum_order_day")
 
-//    orders.select("days_since_prior_order").toDF().
-    orders.where("user_id = 1").groupBy("user_id").sum("days_since_prior_order")
+    var userOrderPerDays = udf((userProductCount:Int, sumUserOrderDay:Float) => (sumUserOrderDay.toFloat / userProductCount).formatted("%.2f"))
+    userOrderCount.join(userOrderSumDays, "user_id").withColumn("user_Order_Per_Days", userOrderPerDays(col("user_product_count"), col("sum_order_day"))).show(10)
+
+    spark.stop()
   }
 
   /**
