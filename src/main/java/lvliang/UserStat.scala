@@ -114,7 +114,7 @@ object UserStat {
     //获取用户购买商品数量
     val userProductCount = orders.join(order_products_prior, "order_id").groupBy("user_id").count().withColumnRenamed("count", "user_product_count")
 
-    var userAvgProductCountOfOrder = udf((productCount:String, orderCount:String) => ((productCount.toFloat / orderCount.toFloat) * 100).formatted("%.2f"))
+    var userAvgProductCountOfOrder = udf((productCount:String, orderCount:String) => ((productCount.toFloat / orderCount.toFloat).formatted("%.2f")))
 
     userOrderCount.join(userProductCount, "user_id").withColumn("userAvgProductCountOfOrder", userAvgProductCountOfOrder(col("user_product_count"), col("user_order_count"))).show(20)
 
