@@ -84,4 +84,32 @@ object Product01 {
     Product01.q3()
   }
 
+  /**
+    * 老师课上书写代码
+    */
+  def teacher_answer() = {
+    var warehouseLocation = "/usr/hive/warehouse"
+    val spark: SparkSession = SparkSession.builder
+      .appName("SparkTest")
+      .config("spark.sql.warehouse.dir", warehouseLocation)
+      .enableHiveSupport()
+      .getOrCreate
+
+    val order_products_prior = spark.sql("select * from badou.order_products_prior")
+
+    /**
+      * 老师写法
+      */
+    val result = order_products_prior.selectExpr("product_id", "cast(reordered as int)")
+      .groupBy("product_id")
+      .agg(sum("reordered").as("sum_product_count"),
+        avg("reordered").as("prod_rod_rate"),
+        count("product_id").as("prod_cnt")
+      ).show(5)
+
+//    order_products_prior.selectExpr("product_id", "cast(reordered as int)").groupBy("product_id").sum("reordered").withColumnRenamed("sum(reordered)", "sum_result").show(5)
+
+    spark.stop()
+  }
+
 }

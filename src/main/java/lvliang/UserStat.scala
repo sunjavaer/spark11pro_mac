@@ -1,7 +1,9 @@
 package lvliang
 
-import org.apache.spark.sql.SparkSession
+import java.util.Properties
+
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{SaveMode, SparkSession}
 
 /**
   * <p>Company:misspao </p >
@@ -72,6 +74,16 @@ object UserStat {
     var order_products_prior = spark.sql("select * from badou.order_products_prior")
       orders.join(order_products_prior, "order_id").select("user_id", "product_id").distinct().orderBy("user_id").show(5)
 
+    orders.join(order_products_prior, "order_id")
+      .select("user_id", "product_id")
+      .distinct()
+      .groupBy("user_id")
+        .agg(concat_ws(",", collect_list(col("product_id"))).as("product_list"))
+      .selectExpr("cast(user_id as int) as usr_id", "product_list")
+      .orderBy("usr_id")
+      .orderBy(desc("usr_id"))
+      .show(5)
+
     spark.stop()
   }
 
@@ -118,17 +130,52 @@ object UserStat {
     val userOrderCount = orders.groupBy("user_id").count().withColumnRenamed("count", "user_order_count")
     //获取用户购买商品数量
     val userProductCount = orders.join(order_products_prior, "order_id").groupBy("user_id").count().withColumnRenamed("count", "user_product_count")
-
+    //定义函数
     var userAvgProductCountOfOrder = udf((productCount:String, orderCount:String) => ((productCount.toFloat / orderCount.toFloat).formatted("%.2f")))
 
     userOrderCount.join(userProductCount, "user_id").withColumn("userAvgProductCountOfOrder", userAvgProductCountOfOrder(col("user_product_count"), col("user_order_count"))).show(20)
 
     spark.stop()
+
+    spark.sql("select * from order").rollup("area", "memberType").agg(sum("price"))
+  }
+
+  def spartOrderStat() = {
+    val warehouseLocation = "/usr/hive/warehouse"
+    val spark: SparkSession = SparkSession.builder
+      .appName("SparkTest")
+      //      .master("local[*]")               //提交模式交给spark-submit控制
+      .config("spark.sql.warehouse.dir", warehouseLocation)
+      .enableHiveSupport()
+      .getOrCreate
+
+    val url = "jdbc:mysql://47.105.211.70:3124/misspao_20190424?characterEncoding=utf8"
+    val properties:Properties = new Properties
+    properties.setProperty("user", "misspao")
+    properties.setProperty("password", "misspao")
+    val tableName = "mp_sport_order_stat"
+
+    val file = spark.read.json("/misspao_data/order.json")
+    file.createOrReplaceTempView("orders")
+
+    val orders = spark.sql("select * from orders")
+    val ordersResult = orders.selectExpr("year(createTime) as year", "cityName", "areaName", "status", "needPayAmount", "cast(newOrder as Int)")
+      .rollup("year", "cityName", "areaName", "status")
+      .agg(sum("needPayAmount").as("sum_needPayAmount"),
+        count("needPayAmount").as("count_order"),
+        sum("newOrder").as("count_new_order"))
+      .orderBy("year", "cityName", "areaName", "status")
+
+    //.write.mode(SaveMode.Overwrite).jdbc(url, tableName, properties)
+    val result = ordersResult.selectExpr("cast(year as String)", "cityName", "areaName", "status", "sum_needPayAmount", "count_order", "count_new_order")
+
+    result.selectExpr("if(year is null, 'all', year) as year", "cityName", "areaName", "status as payStatus", "sum_needPayAmount", "count_order", "count_new_order").write.mode(SaveMode.Overwrite).jdbc(url, tableName, properties)
+
   }
 
   def main(args: Array[String]): Unit = {
 
-    UserStat.q4()
+    UserStat.spartOrderStat()
   }
 
 }
